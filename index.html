@@ -368,6 +368,8 @@ const WEEKDAYS_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WEEKDAYS_FULL = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+const MARK_TYPES = ["Работа над ошибками","Самостоятельная работа","Анализ контрольной работы","Анализ правила","Анализ упражнения","Анкета/Формулятор","Аудирование","Викторина","Грамматическое задание","Диалог/Полилог","Доклад","Домашняя работа","Задания по теме","Задано у доски","Индивидуальное домашнее задание","Индивидуальное задание","Исследовательская работа","Комбинированная работа","Конкурс","Конспект","Конференция","Монолог","Независимая диагностика","Олимпиада","Орфографическая работа","Ответ на уроке","Ответ правила","Ответ у доски","Открытый урок","Отработка проблем","Повторение изученного","Повторение материала","Практическая работа","Презентация","Проект","Проработка проблем","Работа в группах","Работа на уроке","Работа по карточке","Работа с текстом","Реферат","Сообщение по теме","Составление текста","Списывание текста","Теоретический ответ","Упражнение на повторение","Устный опрос","Устный ответ","Учебное задание","Учебное упражнение","Цифровое домашнее задание","Эссе"];
+
 const LESSON_TYPES = ["Работа в тетради","Работа над ошибками","Самостоятельная работа","Анализ контрольной работы","Анализ правила","Анализ упражнений","Анкета/Формулятор","Аудирование","Викторина","Грамматическое задание","Диалог/Полилог","Доклад","Домашняя работа","Задание по теме","Задание у доски","Индивидуальное домашнее задание","Индивидуальное задание","Исследовательская работа","Комбинированная работа","Конкурс","Конспект","Конференция","Монолог","Независимая диагностика","Олимпиада","Орфографическая работа","Ответ домашнего задания","Ответ на уроке","Ответ правила","Ответ у доски","Открытый урок","Отработка проблем","Повторение изученого","Повторение материала","Практическая работа","Презентация","Проект","Проработка проблем","Работа в группах","Работа на уроке","Работа по карточке","Работа с текстом","Реферат","Сообщение по теме","Составление текста","Списывание текста","Теоретический ответ","Упражнение на повторение","Устный опрос","Устный ответ","Учебное задание","Учебное упражнение","Цифровое домашнее задание","Эссе"];
 
 function averageGrade(studentIndex, marks, today){
@@ -823,7 +825,8 @@ function renderJournalTable(classId, mc, marks, indivHw, today){
         const cls = disp==='Н' ? 'absent' : (cell && cell.isDot && disp==='2' ? 'auto2' : 'grade');
         badgeHtml = `<span class="jbadge ${cls}">${disp}</span>`;
       }
-      bodyHtml += `<td class="jcell jdate-col" data-idx="${idx}" data-date="${iso}">${badgeHtml}${hasHw?'<span class="jhw-flag"></span>':''}</td>`;
+      const titleAttr = cell?.markType ? ` title="${escapeHtml(cell.markType)}"` : '';
+      bodyHtml += `<td class="jcell jdate-col" data-idx="${idx}" data-date="${iso}"${titleAttr}>${badgeHtml}${hasHw?'<span class="jhw-flag"></span>':''}</td>`;
     });
     bodyHtml += `</tr>`;
   });
@@ -845,6 +848,7 @@ function openMarkEditor(classId, idx, dateISO, existing){
   const studentName = klass?.students[idx] || '';
   let mode = existing?.isAbsent ? 'ABSENT' : (existing?.isDot ? 'DOT' : 'GRADE');
   let slots = (existing?.grades && existing.grades.length) ? [...existing.grades] : [''];
+  let markType = existing?.markType || '';
   let dotDeadline = existing?.dotDeadline || fmtDateISO(new Date());
 
   const overlay = document.createElement('div');
@@ -881,12 +885,18 @@ function openMarkEditor(classId, idx, dateISO, existing){
       content.innerHTML = `
         <div id="gradeSlots" style="display:flex; flex-direction:column; gap:12px;"></div>
         <button class="btn" id="addSlot" style="margin-top:12px; font-size:12px;">+ Ещё отметка</button>
-        <div style="color:var(--muted); font-size:12px; margin-top:12px;">Несколько отметок сохранятся через дробь — например 5/2.</div>
+        <div style="color:var(--muted); font-size:12px; margin:12px 0 18px;">Несколько отметок сохранятся через дробь — например 5/2.</div>
+        <label class="field-label">Тип отметки</label>
+        <select class="input" id="markTypeSelect">
+          <option value="">Не указан</option>
+          ${MARK_TYPES.map(t=>`<option value="${escapeHtml(t)}" ${markType===t?'selected':''}>${escapeHtml(t)}</option>`).join('')}
+        </select>
       `;
       drawSlots();
       content.querySelector('#addSlot').onclick = ()=>{
         if(slots.length<4){ slots.push(''); drawSlots(); }
       };
+      content.querySelector('#markTypeSelect').onchange = (e)=>{ markType = e.target.value; };
     } else if(mode === 'DOT'){
       content.innerHTML = `
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
@@ -942,13 +952,13 @@ function openMarkEditor(classId, idx, dateISO, existing){
     const docId = `${classId}_${idx}_${dateISO}`;
     let cellData = null;
     if(mode === 'ABSENT'){
-      cellData = { classId, studentIndex: idx, date: dateISO, grades: [], isDot:false, dotDeadline:null, dotFixed:false, isAbsent:true };
+      cellData = { classId, studentIndex: idx, date: dateISO, grades: [], isDot:false, dotDeadline:null, dotFixed:false, isAbsent:true, markType:null };
     } else if(mode === 'DOT'){
-      cellData = { classId, studentIndex: idx, date: dateISO, grades: [], isDot:true, dotDeadline, dotFixed:false, isAbsent:false };
+      cellData = { classId, studentIndex: idx, date: dateISO, grades: [], isDot:true, dotDeadline, dotFixed:false, isAbsent:false, markType:null };
     } else {
       const filtered = slots.filter(s=>s);
       if(filtered.length===0){ await deleteDoc(doc(col('marks'), docId)); toast('Отметка очищена'); close(); return; }
-      cellData = { classId, studentIndex: idx, date: dateISO, grades: filtered, isDot:false, dotDeadline:null, dotFixed:false, isAbsent:false };
+      cellData = { classId, studentIndex: idx, date: dateISO, grades: filtered, isDot:false, dotDeadline:null, dotFixed:false, isAbsent:false, markType: markType || null };
     }
     await setDoc(doc(col('marks'), docId), cellData);
     toast('Сохранено');
