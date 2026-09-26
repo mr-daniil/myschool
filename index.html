@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Моя Школа · Электронный журнал</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14161C; --paper:#F5F6FA; --card:#FFFFFF; --elevated:#ECEEF3; --line:#DBDEE6;
+  --muted:#6B7280; --secondary:#4B5160; --accent:#2F6FE0; --accent-soft:#DCE7FB;
+  --danger:#D8362A; --danger-soft:#FBE0DD; --dot:#7A4E00; --dot-soft:#FCE4B0;
+  --indigo-dark:#E4E9FB; --indigo:#AAB8E8; --blue:#2F6FE0; --blue-light:#6E97EE;
+  --radius-s:8px; --radius-m:12px; --radius-l:18px;
+  --shadow-sm: 0 1px 2px rgba(20,22,28,.06), 0 1px 1px rgba(20,22,28,.04);
+  --shadow-md: 0 8px 24px rgba(20,22,28,.08), 0 2px 6px rgba(20,22,28,.05);
+  --shadow-lg: 0 20px 50px rgba(20,22,28,.14), 0 4px 14px rgba(20,22,28,.08);
+  --sidebar-w: 264px;
+  color-scheme: light;
+}
+html.dark{
+  --ink:#F2F4F8; --paper:#0E1016; --card:#171A22; --elevated:#1E212B; --line:#272B36;
+  --muted:#878E9C; --secondary:#AFB5C0; --accent:#4E8CFF; --accent-soft:#1B2740;
+  --danger:#FF6259; --danger-soft:#2E1A1A; --dot:#FFC94D; --dot-soft:#3A2F10;
+  --indigo-dark:#141A33; --indigo:#2E3A66; --blue:#4E8CFF; --blue-light:#8FBBFF;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 8px 24px rgba(0,0,0,.35);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background:var(--paper); color:var(--ink);
+  transition: background .35s ease, color .35s ease;
+  overflow:hidden;
+  height:100vh; width:100vw;
+}
+button, input, select, textarea{ font-family:inherit; color:inherit; }
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--muted); }
+
+/* ============ LOGIN SCREEN ============ */
+#loginScreen{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(135deg, var(--indigo-dark), var(--indigo) 55%, var(--blue));
+  z-index:200;
+  animation: fadeIn .5s ease;
+}
+html.dark #loginScreen{
+  background: linear-gradient(135deg, #141A33, #2E3A66 55%, rgba(78,140,255,.55));
+}
+#loginScreen::before, #loginScreen::after{
+  content:''; position:absolute; border-radius:48px; filter:blur(0px);
+  background: rgba(143,187,255,.18);
+  animation: floatShape 7s ease-in-out infinite alternate;
+}
+#loginScreen::before{ width:220px; height:220px; top:8%; left:6%; }
+#loginScreen::after{ width:170px; height:170px; bottom:10%; right:8%; background:rgba(78,140,255,.16); animation-duration:8.5s; animation-direction:alternate-reverse; }
+@keyframes floatShape{ from{ transform: translate(0,0) rotate(0deg);} to{ transform: translate(24px,-22px) rotate(4deg);} }
+
+.login-card{
+  width:400px; max-width:92vw; background:var(--card); border-radius:24px;
+  box-shadow: var(--shadow-lg); padding:44px 40px;
+  animation: cardIn .6s cubic-bezier(.2,.9,.25,1.2);
+  position:relative; z-index:2;
+}
+@keyframes cardIn{ from{ opacity:0; transform: translateY(26px) scale(.96);} to{opacity:1; transform:translateY(0) scale(1);} }
+.login-card.shake{ animation: shakeX .4s ease; }
+@keyframes shakeX{ 0%{transform:translateX(0)} 15%{transform:translateX(-12px)} 35%{transform:translateX(12px)} 55%{transform:translateX(-8px)} 75%{transform:translateX(8px)} 100%{transform:translateX(0)} }
+
+.logo-badge{
+  width:64px; height:64px; border-radius:18px; margin:0 auto 18px;
+  background: linear-gradient(135deg, var(--indigo), var(--blue));
+  display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+  animation: logoPulse 2.4s ease-in-out infinite;
+  box-shadow: 0 10px 24px rgba(47,111,224,.35);
+}
+@keyframes logoPulse{ 0%,100%{ transform: scale(1) rotate(-2deg);} 50%{ transform: scale(1.07) rotate(2deg);} }
+.logo-badge::before{
+  content:''; position:absolute; top:0; left:0; width:26px; height:26px;
+  background:var(--blue-light); border-radius:0 0 18px 0;
+}
+.logo-badge span{ color:#fff; font-weight:800; font-size:16px; z-index:1; }
+
+.login-title{ text-align:center; font-size:22px; font-weight:800; margin-bottom:2px; }
+.login-sub{ text-align:center; color:var(--muted); font-size:13px; margin-bottom:28px; }
+
+.field{ margin-bottom:14px; }
+.field label{ display:block; font-size:12px; font-weight:600; color:var(--secondary); margin-bottom:6px; }
+.field input{
+  width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid var(--line);
+  background: var(--paper); font-size:14px; outline:none; transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.field input:focus{ border-color:var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); background:var(--card); }
+.field input.err{ border-color:var(--danger); }
+
+.login-error{
+  color:var(--danger); font-size:12.5px; margin: -4px 0 14px; opacity:0;
+  max-height:0; overflow:hidden; transition: all .25s ease;
+}
+.login-error.show{ opacity:1; max-height:40px; margin-bottom:14px; }
+
+.btn-primary{
+  width:100%; padding:13px; border:none; border-radius:12px; background:var(--accent); color:#fff;
+  font-weight:700; font-size:14.5px; cursor:pointer; margin-top:8px;
+  transition: transform .15s ease, box-shadow .2s, opacity .2s;
+  box-shadow: 0 8px 20px rgba(47,111,224,.28);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  position:relative;
+}
+.btn-primary:hover{ transform: translateY(-1px); box-shadow: 0 10px 26px rgba(47,111,224,.38); }
+.btn-primary:active{ transform: scale(.97); }
+.btn-primary:disabled{ opacity:.65; cursor:default; transform:none; }
+.spinner{ width:16px; height:16px; border-radius:50%; border:2.5px solid rgba(255,255,255,.4); border-top-color:#fff; animation:spin .7s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg);} }
+
+/* ============ APP SHELL ============ */
+#app{ display:none; height:100vh; width:100vw; }
+#app.show{ display:flex; animation: fadeIn .4s ease; }
+@keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+
+.sidebar{
+  width:var(--sidebar-w); min-width:var(--sidebar-w); height:100vh; background:var(--card);
+  border-right:1px solid var(--line); display:flex; flex-direction:column; padding:20px 14px;
+  transition: background .35s ease, border-color .35s ease;
+}
+.brand{ display:flex; align-items:center; gap:12px; padding:6px 8px 22px; }
+.brand .logo-badge{ width:38px; height:38px; border-radius:12px; margin:0; animation:none; }
+.brand .logo-badge::before{ width:15px; height:15px; border-radius:0 0 12px 0; }
+.brand .logo-badge span{ font-size:11px; }
+.brand-text b{ display:block; font-size:15.5px; font-weight:800; }
+.brand-text small{ color:var(--muted); font-size:11px; }
+
+.nav{ display:flex; flex-direction:column; gap:4px; flex:1; }
+.nav-item{
+  display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; cursor:pointer;
+  color:var(--secondary); font-size:14px; font-weight:600; transition: all .2s ease; position:relative;
+  user-select:none;
+}
+.nav-item svg{ width:19px; height:19px; flex-shrink:0; transition: transform .25s ease; }
+.nav-item:hover{ background:var(--elevated); color:var(--ink); }
+.nav-item.active{ background:var(--accent); color:#fff; box-shadow:0 6px 16px rgba(47,111,224,.28); }
+.nav-item.active svg{ transform: scale(1.05); }
+
+.sidebar-footer{ display:flex; flex-direction:column; gap:8px; padding-top:14px; border-top:1px solid var(--line); }
+.theme-toggle{
+  display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:12px;
+  background:var(--elevated); cursor:pointer; font-size:13px; font-weight:600; color:var(--secondary);
+}
+.switch{ width:38px; height:22px; border-radius:20px; background:var(--line); position:relative; transition: background .25s; flex-shrink:0; }
+.switch.on{ background:var(--accent); }
+.switch::after{ content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; top:3px; left:3px; transition: transform .25s cubic-bezier(.3,1.4,.5,1); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.switch.on::after{ transform: translateX(16px); }
+
+.logout-btn{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; cursor:pointer;
+  color:var(--danger); font-size:13px; font-weight:700; transition: background .2s;
+}
+.logout-btn:hover{ background: var(--danger-soft); }
+
+.main{ flex:1; height:100vh; overflow-y:auto; overflow-x:hidden; position:relative; }
+.page{
+  padding:28px 36px 48px; max-width:1400px; margin:0 auto;
+  animation: pageIn .38s cubic-bezier(.22,.9,.3,1);
+}
+@keyframes pageIn{ from{ opacity:0; transform: translateY(10px);} to{opacity:1; transform:translateY(0);} }
+.page-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:14px; }
+.page-title{ font-size:24px; font-weight:800; }
+.page-sub{ color:var(--muted); font-size:13.5px; margin-top:2px; }
+
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius-l);
+  box-shadow: var(--shadow-sm); transition: box-shadow .25s ease, border-color .25s, background .35s;
+}
+.card:hover{ box-shadow: var(--shadow-md); }
+
+.btn{
+  padding:9px 16px; border-radius:10px; border:1px solid var(--line); background:var(--card);
+  font-size:13px; font-weight:700; cursor:pointer; transition: all .18s ease; color:var(--ink);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.btn:hover{ background:var(--elevated); transform: translateY(-1px); }
+.btn:active{ transform: scale(.96); }
+.btn-accent{ background:var(--accent); color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(47,111,224,.25); }
+.btn-accent:hover{ filter:brightness(1.08); background:var(--accent); }
+.btn-accent:disabled{ opacity:.5; cursor:default; transform:none; }
+.btn-danger-text{ background:none; border:none; color:var(--danger); font-weight:700; font-size:12.5px; cursor:pointer; padding:4px 8px; border-radius:8px; }
+.btn-danger-text:hover{ background:var(--danger-soft); }
+.btn-icon{
+  width:34px; height:34px; border-radius:10px; border:1px solid var(--line); background:var(--card);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .18s ease; color:var(--accent); font-weight:800;
+}
+.btn-icon:hover{ background:var(--elevated); transform: translateY(-1px); }
+.btn-icon:active{ transform: scale(.9); }
+
+input.input, select.input, textarea.input{
+  width:100%; padding:10px 13px; border-radius:10px; border:1.5px solid var(--line); background:var(--paper);
+  font-size:13.5px; outline:none; transition: border-color .2s, box-shadow .2s;
+}
+input.input:focus, select.input:focus, textarea.input:focus{ border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+.field-label{ font-size:12px; font-weight:700; color:var(--secondary); margin-bottom:6px; display:block; }
+
+.chip{
+  padding:7px 14px; border-radius:20px; border:1px solid var(--line); background:var(--elevated);
+  font-size:12.5px; font-weight:600; cursor:pointer; transition: all .18s ease; display:inline-flex; align-items:center; gap:6px;
+}
+.chip:hover{ transform: translateY(-1px); }
+.chip.selected{ background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 4px 10px rgba(47,111,224,.3); }
+
+/* Tabs (segmented) */
+.segmented{
+  display:inline-flex; background:var(--paper); border-radius:12px; padding:4px; gap:2px; border:1px solid var(--line);
+}
+.seg-item{
+  padding:8px 18px; border-radius:9px; font-size:13px; font-weight:700; color:var(--secondary); cursor:pointer;
+  transition: all .2s ease; white-space:nowrap;
+}
+.seg-item.active{ background:var(--card); color:var(--accent); box-shadow:var(--shadow-sm); }
+
+/* Toast */
+#toast{
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); z-index:500;
+  background:var(--ink); color:var(--paper); padding:12px 22px; border-radius:12px; font-size:13.5px; font-weight:600;
+  box-shadow:var(--shadow-lg); opacity:0; pointer-events:none; transition: all .3s cubic-bezier(.3,1,.4,1);
+  display:flex; align-items:center; gap:8px;
+}
+#toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Modal */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(10,12,18,.5); backdrop-filter: blur(3px); z-index:300;
+  display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition: opacity .25s ease;
+}
+.modal-overlay.show{ opacity:1; pointer-events:auto; }
+.modal-box{
+  background:var(--card); border-radius:20px; padding:26px; width:440px; max-width:92vw; max-height:86vh; overflow-y:auto;
+  box-shadow: var(--shadow-lg); transform: translateY(16px) scale(.97); transition: transform .3s cubic-bezier(.2,.9,.25,1.2);
+}
+.modal-overlay.show .modal-box{ transform: translateY(0) scale(1); }
+.modal-title{ font-size:17px; font-weight:800; margin-bottom:4px; }
+.modal-sub{ color:var(--muted); font-size:12.5px; margin-bottom:18px; }
+.modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+
+/* Empty hint */
+.empty-hint{ color:var(--muted); font-size:13.5px; text-align:center; padding:40px 20px; }
+
+/* Grade badges */
+.grade-tiles{ display:flex; gap:8px; }
+.grade-tile{
+  width:44px; height:44px; border-radius:11px; background:var(--elevated); display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:16px; cursor:pointer; transition: all .16s ease; border:1.5px solid transparent;
+}
+.grade-tile:hover{ transform: translateY(-1px); }
+.grade-tile.selected{ background:var(--accent); color:#fff; box-shadow: 0 4px 12px rgba(47,111,224,.3); }
+
+::selection{ background: var(--accent-soft); }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card" id="loginCard">
+    <div class="logo-badge"><span>МШ</span></div>
+    <div class="login-title">Моя Школа</div>
+    <div class="login-sub">Электронный журнал</div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Пароль</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">
+      <span id="loginBtnText">Войти</span>
+    </button>
+  </div>
+</div>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-badge"><span>МШ</span></div>
+      <div class="brand-text"><b>Моя Школа</b><small>электронный журнал</small></div>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeLabel">Тёмная тема</span>
+        <div class="switch" id="themeSwitch"></div>
+      </div>
+      <div class="logout-btn" onclick="doLogout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Выйти из аккаунта
+      </div>
+    </div>
+  </aside>
+  <main class="main" id="mainArea"></main>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, setDoc, getDoc, deleteDoc, addDoc,
+  onSnapshot, query, where, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDb9Jaxi1Bs24z-EyYA4_NaXRpTaIufg2o",
+  authDomain: "myschooool-3c89d.firebaseapp.com",
+  projectId: "myschooool-3c89d",
+  storageBucket: "myschooool-3c89d.firebasestorage.app",
+  messagingSenderId: "409055549595",
+  appId: "1:409055549595:android:39861e803fd444da21ce3e"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let currentUid = null;
+function userRoot(){ return doc(db, "users", currentUid); }
+function col(name){ return collection(userRoot(), name); }
+
+/* ---------------- STATE ---------------- */
+const state = {
+  classes: [], quarters: [], allLessons: [], homeworkAssignments: [],
+  currentTab: 'calendar',
+  currentClassId: null,
+  isDark: localStorage.getItem('myschool_dark') !== 'false',
+};
+const listeners = {}; // per-collection unsubscribers keyed by name+classId
+
+/* ---------------- UTIL ---------------- */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+function fmtDateISO(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseISO(iso){ const [y,m,d]=iso.split('-').map(Number); return new Date(y, m-1, d); }
+function fmtRu(iso){
+  if(!iso) return '';
+  const d = parseISO(iso);
+  return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+function fmtRuShort(iso){
+  const d = parseISO(iso);
+  return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WEEKDAYS_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const WEEKDAYS_FULL = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const LESSON_TYPES = ["Работа в тетради","Работа над ошибками","Самостоятельная работа","Анализ контрольной работы","Анализ правила","Анализ упражнений","Анкета/Формулятор","Аудирование","Викторина","Грамматическое задание","Диалог/Полилог","Доклад","Домашняя работа","Задание по теме","Задание у доски","Индивидуальное домашнее задание","Индивидуальное задание","Исследовательская работа","Комбинированная работа","Конкурс","Конспект","Конференция","Монолог","Независимая диагностика","Олимпиада","Орфографическая работа","Ответ домашнего задания","Ответ на уроке","Ответ правила","Ответ у доски","Открытый урок","Отработка проблем","Повторение изученого","Повторение материала","Практическая работа","Презентация","Проект","Проработка проблем","Работа в группах","Работа на уроке","Работа по карточке","Работа с текстом","Реферат","Сообщение по теме","Составление текста","Списывание текста","Теоретический ответ","Упражнение на повторение","Устный опрос","Устный ответ","Учебное задание","Учебное упражнение","Цифровое домашнее задание","Эссе"];
+
+function averageGrade(studentIndex, marks, today){
+  const values = [];
+  marks.filter(m=>m.studentIndex===studentIndex).forEach(cell=>{
+    if(cell.isDot){
+      const deadlinePassed = cell.dotDeadline && parseISO(cell.dotDeadline) < today && !cell.dotFixed;
+      if(deadlinePassed) values.push(2);
+    } else if(cell.isAbsent){
+      // skip
+    } else {
+      (cell.grades||[]).forEach(g=>{ const n=parseInt(g,10); if(!isNaN(n)) values.push(n); });
+    }
+  });
+  if(values.length===0) return null;
+  return values.reduce((a,b)=>a+b,0)/values.length;
+}
+function markDisplay(cell, today){
+  if(!cell) return '';
+  if(cell.isDot){
+    const deadlinePassed = cell.dotDeadline && parseISO(cell.dotDeadline) < today && !cell.dotFixed;
+    return deadlinePassed ? '2' : '•';
+  }
+  if(cell.isAbsent) return 'Н';
+  if(cell.grades && cell.grades.length) return cell.grades.join('/');
+  return '';
+}
+
+/* ---------------- AUTH ---------------- */
+window.doLogin = async function(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  const btnText = document.getElementById('loginBtnText');
+  if(!email || !password) return;
+  errEl.classList.remove('show'); errEl.textContent='';
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span>';
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+  }catch(e){
+    let msg = 'Ошибка входа: ' + (e.message||'неизвестная ошибка');
+    if(e.code === 'auth/invalid-credential' || e.code==='auth/wrong-password') msg = 'Неверный email или пароль';
+    else if(e.code === 'auth/user-not-found') msg = 'Пользователь с таким email не найден';
+    else if(e.code === 'auth/network-request-failed') msg = 'Нет подключения к интернету';
+    else if(e.code === 'auth/too-many-requests') msg = 'Слишком много попыток. Попробуйте позже';
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+    const card = document.getElementById('loginCard');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    btn.disabled = false;
+    btnText.textContent = 'Войти';
+  }
+};
+document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') window.doLogin(); });
+document.getElementById('loginEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginPassword').focus(); });
+
+window.doLogout = async function(){
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    currentUid = user.uid;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').classList.add('show');
+    startGlobalListeners();
+    buildNav();
+    renderTab(state.currentTab);
+  } else {
+    currentUid = null;
+    Object.values(listeners).forEach(unsub=>{ try{unsub();}catch(e){} });
+    document.getElementById('app').classList.remove('show');
+    document.getElementById('loginScreen').style.display='flex';
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = false;
+    document.getElementById('loginBtnText').textContent = 'Войти';
+  }
+});
+
+/* ---------------- THEME ---------------- */
+function applyTheme(){
+  document.documentElement.classList.toggle('dark', state.isDark);
+  document.getElementById('themeSwitch').classList.toggle('on', state.isDark);
+  document.getElementById('themeLabel').textContent = state.isDark ? 'Тёмная тема' : 'Светлая тема';
+}
+window.toggleTheme = function(){
+  state.isDark = !state.isDark;
+  localStorage.setItem('myschool_dark', state.isDark);
+  applyTheme();
+};
+applyTheme();
+
+/* ---------------- GLOBAL LISTENERS ---------------- */
+function startGlobalListeners(){
+  if(listeners.classes) listeners.classes();
+  listeners.classes = onSnapshot(col('classes'), snap=>{
+    state.classes = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    if(!state.currentClassId && state.classes.length) state.currentClassId = state.classes[0].id;
+    if(state.currentClassId && !state.classes.find(c=>c.id===state.currentClassId)){
+      state.currentClassId = state.classes[0]?.id || null;
+    }
+    renderTab(state.currentTab, true);
+  });
+
+  if(listeners.quarters) listeners.quarters();
+  listeners.quarters = onSnapshot(col('quarters'), snap=>{
+    state.quarters = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderTab(state.currentTab, true);
+  });
+
+  if(listeners.lessons) listeners.lessons();
+  listeners.lessons = onSnapshot(col('lessons'), snap=>{
+    state.allLessons = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderTab(state.currentTab, true);
+  });
+
+  if(listeners.hw) listeners.hw();
+  listeners.hw = onSnapshot(col('homeworkAssignments'), snap=>{
+    state.homeworkAssignments = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderTab(state.currentTab, true);
+  });
+}
+
+/* ---------------- NAV ---------------- */
+const TABS = [
+  { id:'calendar', label:'Календарь', icon:`<path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/>` },
+  { id:'journal', label:'Журнал', icon:`<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>` },
+  { id:'tasks', label:'Задания', icon:`<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>` },
+  { id:'homework', label:'Проверка ДЗ', icon:`<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/>` },
+  { id:'tools', label:'Инструменты', icon:`<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>` },
+];
+function buildNav(){
+  const nav = document.getElementById('navList');
+  nav.innerHTML = TABS.map(t=>`
+    <div class="nav-item ${state.currentTab===t.id?'active':''}" data-tab="${t.id}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>
+      ${t.label}
+    </div>
+  `).join('');
+  nav.querySelectorAll('.nav-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.currentTab = el.dataset.tab;
+      buildNav();
+      renderTab(state.currentTab);
+    });
+  });
+}
+
+function renderTab(tab, silent){
+  const main = document.getElementById('mainArea');
+  if(!silent){
+    main.innerHTML = '';
+  }
+  switch(tab){
+    case 'calendar': renderCalendar(); break;
+    case 'journal': renderJournal(); break;
+    case 'tasks': renderTasks(); break;
+    case 'homework': renderHomework(); break;
+    case 'tools': renderTools(); break;
+  }
+}
+
+/* ---------------- CLASS PICKER (shared) ---------------- */
+function classPickerHtml(id, selectedId){
+  const opts = state.classes.map(c=>`<option value="${c.id}" ${c.id===selectedId?'selected':''}>${escapeHtml(c.name)} · ${escapeHtml(c.subject)}</option>`).join('');
+  return `<select class="input" id="${id}" style="max-width:280px; font-weight:700; cursor:pointer;">${opts || '<option>Нет классов</option>'}</select>`;
+}
+
+/* ================= CALENDAR TAB ================= */
+let calState = { monthCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1), selectedDate: new Date() };
+
+function renderCalendar(){
+  const main = document.getElementById('mainArea');
+  const mc = calState.monthCursor;
+  const sel = calState.selectedDate;
+  const selISO = fmtDateISO(sel);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const daysInMonth = new Date(mc.getFullYear(), mc.getMonth()+1, 0).getDate();
+  const firstDow = (new Date(mc.getFullYear(), mc.getMonth(), 1).getDay() + 6) % 7; // Monday=0
+  const lessonDatesSet = new Set(state.allLessons.map(l=>l.date));
+
+  let cellsHtml = '';
+  for(let i=0;i<firstDow;i++) cellsHtml += `<div></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const dateObj = new Date(mc.getFullYear(), mc.getMonth(), d);
+    const iso = fmtDateISO(dateObj);
+    const isSelected = iso === selISO;
+    const isToday = dateObj.getTime() === today.getTime();
+    const hasLesson = lessonDatesSet.has(iso);
+    cellsHtml += `
+      <div class="cal-cell ${isSelected?'selected':''} ${isToday && !isSelected?'today':''}" data-date="${iso}">
+        <span>${d}</span>
+        ${hasLesson ? '<div class="cal-dot"></div>' : ''}
+      </div>`;
+  }
+
+  const dayLessons = state.allLessons.filter(l=>l.date===selISO);
+  const classesById = Object.fromEntries(state.classes.map(c=>[c.id,c]));
+
+  main.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Календарь</div>
+        <div class="page-sub">Планирование уроков по датам</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 400px 1fr; gap:24px; align-items:start;">
+      <div class="card" style="padding:20px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <div class="btn-icon" id="calPrev">‹</div>
+          <div style="font-weight:800; font-size:15.5px;">${MONTHS_RU[mc.getMonth()]} ${mc.getFullYear()}</div>
+          <div class="btn-icon" id="calNext">›</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;">
+          ${WEEKDAYS_SHORT.map(w=>`<div style="text-align:center; font-size:11px; color:var(--muted); font-weight:700;">${w}</div>`).join('')}
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px;" id="calGrid">
+          ${cellsHtml}
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="padding:20px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <div style="font-weight:800; font-size:15.5px;">${fmtRu(selISO)}</div>
+          </div>
+          <button class="btn btn-accent" id="addLessonBtn" style="width:100%; justify-content:center; padding:12px;" ${state.classes.length===0?'disabled':''}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Добавить урок в эту дату
+          </button>
+          ${state.classes.length===0 ? '<div style="color:var(--muted); font-size:12px; margin-top:8px;">Сначала добавьте класс во вкладке «Инструменты».</div>' : ''}
+        </div>
+
+        ${dayLessons.length ? `
+        <div class="card" style="padding:18px 20px;">
+          ${dayLessons.map(l=>{
+            const kl = classesById[l.classId];
+            return `
+            <div class="lesson-row">
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:14px;">${escapeHtml(l.type)}</div>
+                ${kl?`<div style="color:var(--accent); font-size:11.5px; font-weight:600; margin-top:2px;">${escapeHtml(kl.name)} · ${escapeHtml(kl.subject)}</div>`:''}
+                <div style="color:var(--secondary); font-size:13px; margin-top:3px;">${escapeHtml(l.topic)}</div>
+                ${l.homework?`<div style="color:var(--muted); font-size:12px; margin-top:3px;">ДЗ: ${escapeHtml(l.homework)}</div>`:''}
+              </div>
+              <button class="btn-danger-text" data-del-lesson="${l.id}">Удалить</button>
+            </div>`;
+          }).join('<div style="height:1px; background:var(--line); margin:12px 0;"></div>')}
+        </div>` : `<div class="empty-hint">На эту дату уроков не запланировано</div>`}
+      </div>
+    </div>
+  </div>
+  <style>
+    .cal-cell{ aspect-ratio:1; border-radius:8px; background:var(--elevated); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; transition: all .18s ease; position:relative; border:1.5px solid transparent; }
+    .cal-cell:hover{ transform:scale(1.04); }
+    .cal-cell.selected{ background:var(--accent); color:#fff; font-weight:800; transform:scale(1.05); box-shadow:0 4px 12px rgba(47,111,224,.3); }
+    .cal-cell.today{ border-color:var(--accent); color:var(--accent); font-weight:800; }
+    .cal-dot{ width:4px; height:4px; border-radius:50%; background:currentColor; margin-top:3px; }
+    .lesson-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  </style>
+  `;
+
+  document.getElementById('calPrev').onclick = ()=>{ calState.monthCursor = new Date(mc.getFullYear(), mc.getMonth()-1, 1); renderCalendar(); };
+  document.getElementById('calNext').onclick = ()=>{ calState.monthCursor = new Date(mc.getFullYear(), mc.getMonth()+1, 1); renderCalendar(); };
+  main.querySelectorAll('.cal-cell[data-date]').forEach(el=>{
+    el.addEventListener('click', ()=>{ calState.selectedDate = parseISO(el.dataset.date); renderCalendar(); });
+  });
+  const addBtn = document.getElementById('addLessonBtn');
+  if(addBtn) addBtn.onclick = ()=> openAddLessonModal(selISO);
+  main.querySelectorAll('[data-del-lesson]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      await deleteDoc(doc(col('lessons'), el.dataset.delLesson));
+      toast('Урок удалён');
+    });
+  });
+}
+
+function openAddLessonModal(dateISO){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const classOptions = state.classes.map(c=>`<option value="${c.id}">${escapeHtml(c.name)} · ${escapeHtml(c.subject)}</option>`).join('');
+  const typeOptions = LESSON_TYPES.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-title">Новый урок</div>
+      <div class="modal-sub">${fmtRu(dateISO)}</div>
+      ${state.classes.length>1 ? `
+      <div style="margin-bottom:12px;">
+        <label class="field-label">Класс</label>
+        <select class="input" id="mClass">${classOptions}</select>
+      </div>`:`<input type="hidden" id="mClass" value="${state.classes[0]?.id||''}">`}
+      <div style="margin-bottom:12px;">
+        <label class="field-label">Тип урока</label>
+        <select class="input" id="mType">${typeOptions}</select>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="field-label">Тема урока</label>
+        <input class="input" id="mTopic" placeholder="Тема...">
+      </div>
+      <div style="margin-bottom:4px;">
+        <label class="field-label">Домашнее задание</label>
+        <input class="input" id="mHomework" placeholder="Необязательно">
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="mCancel">Отмена</button>
+        <button class="btn btn-accent" id="mSave">Добавить</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=> overlay.classList.add('show'));
+  function close(){ overlay.classList.remove('show'); setTimeout(()=>overlay.remove(), 250); }
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('#mCancel').onclick = close;
+  overlay.querySelector('#mSave').onclick = async ()=>{
+    const classId = overlay.querySelector('#mClass').value;
+    const type = overlay.querySelector('#mType').value;
+    const topic = overlay.querySelector('#mTopic').value.trim();
+    const homework = overlay.querySelector('#mHomework').value.trim();
+    if(!topic) { toast('Укажите тему урока'); return; }
+    await addDoc(col('lessons'), { classId, date: dateISO, type, topic, homework });
+    toast('Урок добавлен');
+    close();
+  };
+}
+
+/* ================= JOURNAL TAB ================= */
+let journalState = { monthCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
+
+function renderJournal(){
+  const main = document.getElementById('mainArea');
+  if(!state.currentClassId && state.classes.length) state.currentClassId = state.classes[0].id;
+  const klass = state.classes.find(c=>c.id===state.currentClassId);
+  const mc = journalState.monthCursor;
+
+  main.innerHTML = `
+  <div class="page" style="max-width:none;">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Журнал</div>
+        <div class="page-sub">Отметки и оценки по классу</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        ${classPickerHtml('journalClassSel', state.currentClassId)}
+      </div>
+    </div>
+
+    ${!klass ? `<div class="card"><div class="empty-hint">Добавьте класс во вкладке «Инструменты».</div></div>` : `
+    <div class="card" style="padding:18px 20px 20px;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:18px;">
+        <div class="btn-icon" id="jPrev">‹</div>
+        <div style="font-weight:800; font-size:15px; min-width:160px; text-align:center;">${MONTHS_RU[mc.getMonth()]} ${mc.getFullYear()}</div>
+        <div class="btn-icon" id="jNext">›</div>
+      </div>
+      <div id="journalTableWrap" style="overflow-x:auto; border-radius:12px; border:1px solid var(--line);"></div>
+    </div>`}
+  </div>
+  <style>
+    .jtable{ border-collapse:collapse; width:100%; min-width:max-content; }
+    .jtable th, .jtable td{ border-bottom:1px solid var(--line); border-right:1px solid var(--line); white-space:nowrap; }
+    .jtable th{ background:var(--elevated); color:var(--muted); font-size:11px; font-weight:700; padding:10px 8px; position:sticky; top:0; z-index:2; }
+    .jname-col{ position:sticky; left:0; background:var(--card); z-index:3; text-align:left; padding:9px 12px !important; font-size:13px; min-width:170px; }
+    .jname-col-h{ position:sticky; left:0; background:var(--elevated); z-index:4; text-align:left !important; min-width:170px; }
+    .javg-col{ position:sticky; left:170px; background:var(--card); z-index:3; text-align:center !important; min-width:52px; font-weight:800; font-size:12.5px; }
+    .javg-col-h{ position:sticky; left:170px; background:var(--elevated); z-index:4; min-width:52px; text-align:center !important; }
+    .jdate-col{ min-width:56px; text-align:center; padding:6px 4px !important; }
+    .jdate-col-h{ min-width:56px; text-align:center !important; cursor:default; }
+    .jdate-col-h.haslesson{ color:var(--accent); }
+    .jcell{ cursor:pointer; padding:8px 4px !important; text-align:center; position:relative; transition: background .15s; }
+    .jcell:hover{ background:var(--elevated); }
+    .jbadge{ display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:26px; padding:0 6px; border-radius:7px; font-weight:800; font-size:12.5px; transition: transform .15s; }
+    .jcell:active .jbadge{ transform:scale(.88); }
+    .jbadge.grade{ background:var(--accent-soft); color:var(--accent); }
+    .jbadge.dot{ width:14px; height:14px; min-width:14px; border-radius:50%; background:var(--dot); padding:0; }
+    .jbadge.absent, .jbadge.auto2{ background:var(--danger); color:#fff; }
+    .jhw-flag{ position:absolute; top:3px; right:3px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+  </style>
+  `;
+
+  const classSel = document.getElementById('journalClassSel');
+  if(classSel) classSel.onchange = ()=>{ state.currentClassId = classSel.value; renderJournal(); };
+  if(!klass) return;
+
+  document.getElementById('jPrev').onclick = ()=>{ journalState.monthCursor = new Date(mc.getFullYear(), mc.getMonth()-1, 1); renderJournal(); };
+  document.getElementById('jNext').onclick = ()=>{ journalState.monthCursor = new Date(mc.getFullYear(), mc.getMonth()+1, 1); renderJournal(); };
+
+  // Attach realtime listeners scoped to this class
+  attachJournalListeners(klass.id, mc);
+}
+
+function attachJournalListeners(classId, mc){
+  const key = 'journal_'+classId;
+  if(listeners[key]) { listeners[key].forEach(u=>u()); }
+  listeners[key] = [];
+
+  let marks = [], indivHw = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  function draw(){
+    renderJournalTable(classId, mc, marks, indivHw, today);
+  }
+
+  const uMarks = onSnapshot(query(col('marks'), where('classId','==',classId)), snap=>{
+    marks = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    draw();
+  });
+  const uHw = onSnapshot(query(col('individualHw'), where('classId','==',classId)), snap=>{
+    indivHw = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    draw();
+  });
+  listeners[key].push(uMarks, uHw);
+  draw();
+}
+
+function renderJournalTable(classId, mc, marks, indivHw, today){
+  if(state.currentClassId !== classId || journalState.monthCursor.getTime() !== mc.getTime()) return;
+  const wrap = document.getElementById('journalTableWrap');
+  if(!wrap) return;
+  const klass = state.classes.find(c=>c.id===classId);
+  if(!klass) return;
+
+  const daysInMonth = new Date(mc.getFullYear(), mc.getMonth()+1, 0).getDate();
+  const dates = Array.from({length:daysInMonth}, (_,i)=> fmtDateISO(new Date(mc.getFullYear(), mc.getMonth(), i+1)));
+  const lessonDates = new Set(state.allLessons.filter(l=>l.classId===classId).map(l=>l.date));
+  const markMap = {}; marks.forEach(m=> markMap[m.studentIndex+'_'+m.date] = m);
+  const hwSet = new Set(indivHw.map(h=> h.studentIndex+'_'+h.date));
+
+  let headHtml = `<th class="jname-col-h"></th><th class="javg-col-h">Ср.</th>`;
+  dates.forEach(iso=>{
+    const d = parseISO(iso);
+    const wd = WEEKDAYS_SHORT[(d.getDay()+6)%7];
+    const hasLesson = lessonDates.has(iso);
+    headHtml += `<th class="jdate-col-h ${hasLesson?'haslesson':''}">${d.getDate()}<br><span style="font-weight:500; text-transform:none;">${wd}</span></th>`;
+  });
+
+  let bodyHtml = '';
+  klass.students.forEach((name, idx)=>{
+    const avg = averageGrade(idx, marks, today);
+    const avgColor = avg===null ? 'var(--muted)' : (avg>=4.5 ? 'var(--accent)' : (avg<3.5 ? 'var(--danger)' : 'var(--secondary)'));
+    bodyHtml += `<tr><td class="jname-col">${idx+1}. ${escapeHtml(name)}</td><td class="javg-col" style="color:${avgColor};">${avg!==null ? avg.toFixed(1) : '—'}</td>`;
+    dates.forEach(iso=>{
+      const cell = markMap[idx+'_'+iso];
+      const disp = markDisplay(cell, today);
+      const hasHw = hwSet.has(idx+'_'+iso);
+      let badgeHtml = '';
+      if(cell && cell.isDot && disp === '•'){
+        badgeHtml = `<span class="jbadge dot"></span>`;
+      } else if(disp){
+        const cls = disp==='Н' ? 'absent' : (cell && cell.isDot && disp==='2' ? 'auto2' : 'grade');
+        badgeHtml = `<span class="jbadge ${cls}">${disp}</span>`;
+      }
+      bodyHtml += `<td class="jcell jdate-col" data-idx="${idx}" data-date="${iso}">${badgeHtml}${hasHw?'<span class="jhw-flag"></span>':''}</td>`;
+    });
+    bodyHtml += `</tr>`;
+  });
+
+  wrap.innerHTML = `<table class="jtable"><thead><tr>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+
+  wrap.querySelectorAll('.jcell').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const idx = parseInt(el.dataset.idx,10);
+      const date = el.dataset.date;
+      const existing = markMap[idx+'_'+date] || null;
+      openMarkEditor(classId, idx, date, existing);
+    });
+  });
+}
+
+function openMarkEditor(classId, idx, dateISO, existing){
+  const klass = state.classes.find(c=>c.id===classId);
+  const studentName = klass?.students[idx] || '';
+  let mode = existing?.isAbsent ? 'ABSENT' : (existing?.isDot ? 'DOT' : 'GRADE');
+  let slots = (existing?.grades && existing.grades.length) ? [...existing.grades] : [''];
+  let dotDeadline = existing?.dotDeadline || fmtDateISO(new Date());
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-box" id="markModalBox">
+    <div class="modal-title">${escapeHtml(studentName)}</div>
+    <div class="modal-sub">${fmtRu(dateISO)}</div>
+    <div class="segmented" style="width:100%; margin-bottom:18px;" id="markModeSeg">
+      <div class="seg-item" data-mode="GRADE" style="flex:1; text-align:center;">Оценка</div>
+      <div class="seg-item" data-mode="DOT" style="flex:1; text-align:center;">Точка</div>
+      <div class="seg-item" data-mode="ABSENT" style="flex:1; text-align:center;">Н</div>
+    </div>
+    <div id="markModeContent"></div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn-danger-text" id="markClear">Очистить</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" id="markCancel">Отмена</button>
+        <button class="btn btn-accent" id="markSave">Сохранить</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=> overlay.classList.add('show'));
+  function close(){ overlay.classList.remove('show'); setTimeout(()=>overlay.remove(), 250); }
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('#markCancel').onclick = close;
+
+  function renderModeUI(){
+    overlay.querySelectorAll('#markModeSeg .seg-item').forEach(el=>{
+      el.classList.toggle('active', el.dataset.mode===mode);
+    });
+    const content = overlay.querySelector('#markModeContent');
+    if(mode === 'GRADE'){
+      content.innerHTML = `
+        <div id="gradeSlots" style="display:flex; flex-direction:column; gap:12px;"></div>
+        <button class="btn" id="addSlot" style="margin-top:12px; font-size:12px;">+ Ещё отметка</button>
+        <div style="color:var(--muted); font-size:12px; margin-top:12px;">Несколько отметок сохранятся через дробь — например 5/2.</div>
+      `;
+      drawSlots();
+      content.querySelector('#addSlot').onclick = ()=>{
+        if(slots.length<4){ slots.push(''); drawSlots(); }
+      };
+    } else if(mode === 'DOT'){
+      content.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="width:36px; height:36px; border-radius:50%; background:var(--dot); flex-shrink:0;"></div>
+          <div style="font-size:12.5px; color:var(--secondary);">Точка ставится вместо оценки. Если до указанной даты работа не исправлена — точка автоматически станет «2».</div>
+        </div>
+        <label class="field-label">Срок исправления</label>
+        <input type="date" class="input" id="dotDeadlineInput" value="${dotDeadline}">
+      `;
+      content.querySelector('#dotDeadlineInput').onchange = (e)=>{ dotDeadline = e.target.value; };
+    } else {
+      content.innerHTML = `<div style="color:var(--secondary); font-size:14px;">Ученик будет отмечен как отсутствующий — появится «Н».</div>`;
+    }
+  }
+  function drawSlots(){
+    const wrap2 = overlay.querySelector('#gradeSlots');
+    wrap2.innerHTML = slots.map((v,i)=>`
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="grade-tiles">
+          ${['2','3','4','5'].map(g=>`<div class="grade-tile ${v===g?'selected':''}" data-slot="${i}" data-grade="${g}">${g}</div>`).join('')}
+        </div>
+        ${slots.length>1?`<button class="btn-icon" data-remove-slot="${i}" style="color:var(--muted);">✕</button>`:''}
+      </div>
+    `).join('');
+    wrap2.querySelectorAll('[data-slot]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const i = parseInt(el.dataset.slot,10);
+        const g = el.dataset.grade;
+        slots[i] = (slots[i]===g) ? '' : g;
+        drawSlots();
+      });
+    });
+    wrap2.querySelectorAll('[data-remove-slot]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        slots.splice(parseInt(el.dataset.removeSlot,10),1);
+        drawSlots();
+      });
+    });
+  }
+
+  overlay.querySelectorAll('#markModeSeg .seg-item').forEach(el=>{
+    el.addEventListener('click', ()=>{ mode = el.dataset.mode; renderModeUI(); });
+  });
+  renderModeUI();
+
+  overlay.querySelector('#markClear').onclick = async ()=>{
+    const docId = `${classId}_${idx}_${dateISO}`;
+    await deleteDoc(doc(col('marks'), docId));
+    toast('Отметка очищена');
+    close();
+  };
+  overlay.querySelector('#markSave').onclick = async ()=>{
+    const docId = `${classId}_${idx}_${dateISO}`;
+    let cellData = null;
+    if(mode === 'ABSENT'){
+      cellData = { classId, studentIndex: idx, date: dateISO, grades: [], isDot:false, dotDeadline:null, dotFixed:false, isAbsent:true };
+    } else if(mode === 'DOT'){
+      cellData = { classId, studentIndex: idx, date: dateISO, grades: [], isDot:true, dotDeadline, dotFixed:false, isAbsent:false };
+    } else {
+      const filtered = slots.filter(s=>s);
+      if(filtered.length===0){ await deleteDoc(doc(col('marks'), docId)); toast('Отметка очищена'); close(); return; }
+      cellData = { classId, studentIndex: idx, date: dateISO, grades: filtered, isDot:false, dotDeadline:null, dotFixed:false, isAbsent:false };
+    }
+    await setDoc(doc(col('marks'), docId), cellData);
+    toast('Сохранено');
+    close();
+  };
+}
+
+/* ================= TASKS TAB (add lesson quickly) ================= */
+let tasksState = { classId: null, date: fmtDateISO(new Date()), type: LESSON_TYPES[0], topic:'', homework:'' };
+
+function renderTasks(){
+  const main = document.getElementById('mainArea');
+  if(!tasksState.classId && state.classes.length) tasksState.classId = state.classes[0].id;
+  const klass = state.classes.find(c=>c.id===tasksState.classId);
+
+  main.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Задания</div>
+        <div class="page-sub">Быстрое добавление уроков и тем</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:380px 1fr; gap:24px; align-items:start;">
+      <div class="card" style="padding:22px;">
+        ${state.classes.length===0 ? `<div class="empty-hint">Добавьте класс во вкладке «Инструменты».</div>` : `
+        <label class="field-label">Класс</label>
+        ${classPickerHtml('taskClassSel', tasksState.classId)}
+        <div style="height:14px;"></div>
+        <label class="field-label">Дата</label>
+        <input type="date" class="input" id="taskDate" value="${tasksState.date}">
+        <div style="height:14px;"></div>
+        <label class="field-label">Тип урока</label>
+        <select class="input" id="taskType">${LESSON_TYPES.map(t=>`<option ${t===tasksState.type?'selected':''}>${escapeHtml(t)}</option>`).join('')}</select>
+        <div style="height:14px;"></div>
+        <label class="field-label">Тема урока</label>
+        <input class="input" id="taskTopic" placeholder="Тема..." value="${escapeHtml(tasksState.topic)}">
+        <div style="height:14px;"></div>
+        <label class="field-label">Домашнее задание</label>
+        <input class="input" id="taskHomework" placeholder="Необязательно" value="${escapeHtml(tasksState.homework)}">
+        <div style="height:18px;"></div>
+        <button class="btn btn-accent" id="taskAddBtn" style="width:100%; justify-content:center; padding:12px;">Добавить</button>
+        `}
+      </div>
+
+      <div class="card" style="padding:20px;">
+        <div style="font-weight:800; font-size:14.5px; margin-bottom:14px;">История уроков ${klass?('· '+escapeHtml(klass.name)):''}</div>
+        <div id="tasksList"></div>
+      </div>
+    </div>
+  </div>`;
+
+  const classSel = document.getElementById('taskClassSel');
+  if(classSel) classSel.onchange = ()=>{ tasksState.classId = classSel.value; renderTasks(); };
+  if(state.classes.length===0){ document.getElementById('tasksList').innerHTML = `<div class="empty-hint">Нет данных</div>`; return; }
+
+  document.getElementById('taskAddBtn').onclick = async ()=>{
+    const topic = document.getElementById('taskTopic').value.trim();
+    if(!topic){ toast('Укажите тему урока'); return; }
+    const date = document.getElementById('taskDate').value;
+    const type = document.getElementById('taskType').value;
+    const homework = document.getElementById('taskHomework').value.trim();
+    await addDoc(col('lessons'), { classId: tasksState.classId, date, type, topic, homework });
+    tasksState.topic=''; tasksState.homework='';
+    toast('Урок добавлен');
+    renderTasks();
+  };
+
+  attachTasksListener(tasksState.classId);
+}
+
+function attachTasksListener(classId){
+  const key = 'tasks_'+classId;
+  if(listeners[key]) listeners[key]();
+  listeners[key] = onSnapshot(query(col('lessons'), where('classId','==',classId)), snap=>{
+    const lessons = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=> b.date.localeCompare(a.date));
+    const list = document.getElementById('tasksList');
+    if(!list) return;
+    if(lessons.length===0){ list.innerHTML = `<div class="empty-hint">Уроков пока не записано.</div>`; return; }
+    list.innerHTML = lessons.map(l=>`
+      <div style="padding:12px 0; border-bottom:1px solid var(--line);">
+        <div style="font-weight:700; font-size:13.5px;">${fmtRu(l.date)} · ${escapeHtml(l.type)}</div>
+        <div style="color:var(--secondary); font-size:13px; margin-top:2px;">${escapeHtml(l.topic)}</div>
+        ${l.homework?`<div style="color:var(--muted); font-size:12px; margin-top:2px;">ДЗ: ${escapeHtml(l.homework)}</div>`:''}
+        <button class="btn-danger-text" data-del="${l.id}" style="margin-top:4px; padding-left:0;">Удалить</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', async ()=>{ await deleteDoc(doc(col('lessons'), el.dataset.del)); toast('Урок удалён'); });
+    });
+  });
+}
+
+/* ================= HOMEWORK TAB ================= */
+let hwState = { tab:'review', openAssignmentId:null, create: { classIds:new Set(), description:'', dueDate: fmtDateISO(new Date(Date.now()+86400000)), dueTime:'18:00', differentiated:false, targetIndices:new Set() } };
+
+function renderHomework(){
+  const main = document.getElementById('mainArea');
+  main.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Проверка ДЗ</div>
+        <div class="page-sub">Выдача заданий и проверка сдачи</div>
+      </div>
+      <div class="segmented">
+        <div class="seg-item ${hwState.tab==='review'?'active':''}" data-hwtab="review">Проверка ДЗ</div>
+        <div class="seg-item ${hwState.tab==='create'?'active':''}" data-hwtab="create">Создать</div>
+      </div>
+    </div>
+    <div id="hwContent"></div>
+  </div>`;
+
+  main.querySelectorAll('[data-hwtab]').forEach(el=>{
+    el.addEventListener('click', ()=>{ hwState.tab = el.dataset.hwtab; hwState.openAssignmentId=null; renderHomework(); });
+  });
+
+  if(hwState.tab === 'create') renderHwCreate();
+  else renderHwReview();
+}
+
+function renderHwCreate(){
+  const c = hwState.create;
+  const content = document.getElementById('hwContent');
+  const singleClassId = c.classIds.size===1 ? [...c.classIds][0] : null;
+  const singleClass = singleClassId ? state.classes.find(k=>k.id===singleClassId) : null;
+
+  content.innerHTML = `
+  <div class="card" style="padding:24px; max-width:640px;">
+    <label class="field-label">Класс и предмет</label>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;" id="hwClassChips">
+      ${state.classes.map(k=>`<div class="chip ${c.classIds.has(k.id)?'selected':''}" data-cid="${k.id}">${escapeHtml(k.name)} · ${escapeHtml(k.subject)}</div>`).join('') || '<div class="empty-hint">Сначала добавьте класс во вкладке «Инструменты».</div>'}
+    </div>
+    ${c.classIds.size>1?`<div style="color:var(--muted); font-size:12px; margin:-12px 0 16px;">Задание будет выдано сразу ${c.classIds.size} классам</div>`:''}
+
+    <label class="field-label">Срок сдачи</label>
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <input type="date" class="input" id="hwDueDate" value="${c.dueDate}">
+      <input type="time" class="input" id="hwDueTime" value="${c.dueTime}">
+    </div>
+
+    <label class="field-label">Что сделать</label>
+    <textarea class="input" id="hwDesc" placeholder="Опишите задание..." style="min-height:100px; resize:vertical; margin-bottom:18px;">${escapeHtml(c.description)}</textarea>
+
+    ${singleClass ? `
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 0; cursor:pointer;" id="hwDiffToggle">
+      <input type="checkbox" id="hwDiffCheck" ${c.differentiated?'checked':''} style="width:18px; height:18px; accent-color:var(--accent);">
+      <div>
+        <div style="font-weight:700; font-size:13.5px;">Дифференцированное ДЗ</div>
+        <div style="color:var(--muted); font-size:12px;">Задать только конкретным ученикам</div>
+      </div>
+    </div>
+    ${c.differentiated ? `
+    <div style="padding:6px 0 6px 28px; display:flex; flex-direction:column; gap:4px;">
+      ${singleClass.students.map((name,idx)=>`
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; padding:5px 0;">
+          <input type="checkbox" data-tidx="${idx}" ${c.targetIndices.has(idx)?'checked':''} style="width:16px; height:16px; accent-color:var(--accent);">
+          ${idx+1}. ${escapeHtml(name)}
+        </label>`).join('')}
+    </div>`:''}
+    ` : ''}
+
+    <div style="height:8px;"></div>
+    <button class="btn btn-accent" id="hwSaveBtn" style="width:100%; justify-content:center; padding:13px;">Выдать задание</button>
+  </div>`;
+
+  content.querySelectorAll('[data-cid]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const id = el.dataset.cid;
+      if(c.classIds.has(id)) c.classIds.delete(id); else c.classIds.add(id);
+      if(c.classIds.size !== 1){ c.differentiated=false; c.targetIndices.clear(); }
+      c.description = document.getElementById('hwDesc')?.value || c.description;
+      renderHwCreate();
+    });
+  });
+  const diffToggle = document.getElementById('hwDiffToggle');
+  if(diffToggle) diffToggle.addEventListener('click', (e)=>{
+    if(e.target.tagName==='INPUT') return;
+    c.differentiated = !c.differentiated;
+    c.description = document.getElementById('hwDesc')?.value || c.description;
+    renderHwCreate();
+  });
+  const diffCheck = document.getElementById('hwDiffCheck');
+  if(diffCheck) diffCheck.addEventListener('change', (e)=>{ c.differentiated = e.target.checked; c.description = document.getElementById('hwDesc').value; renderHwCreate(); });
+  content.querySelectorAll('[data-tidx]').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const idx = parseInt(el.dataset.tidx,10);
+      if(el.checked) c.targetIndices.add(idx); else c.targetIndices.delete(idx);
+    });
+  });
+
+  document.getElementById('hwSaveBtn').onclick = async ()=>{
+    c.description = document.getElementById('hwDesc').value.trim();
+    c.dueDate = document.getElementById('hwDueDate').value;
+    c.dueTime = document.getElementById('hwDueTime').value;
+    if(c.classIds.size===0 || !c.description){ toast('Заполните класс и описание задания'); return; }
+    if(c.differentiated && c.targetIndices.size===0){ toast('Выберите хотя бы одного ученика'); return; }
+    const firstClass = state.classes.find(k=>k.id===[...c.classIds][0]);
+    await addDoc(col('homeworkAssignments'), {
+      classIds: [...c.classIds],
+      subject: firstClass?.subject || '',
+      description: c.description,
+      dueDate: c.dueDate,
+      dueTime: c.dueTime,
+      differentiated: c.differentiated,
+      targetStudentIndices: c.differentiated ? [...c.targetIndices] : [],
+      createdAt: Date.now()
+    });
+    hwState.create = { classIds:new Set(), description:'', dueDate: fmtDateISO(new Date(Date.now()+86400000)), dueTime:'18:00', differentiated:false, targetIndices:new Set() };
+    toast('Задание выдано');
+    renderHwCreate();
+  };
+}
+
+function renderHwReview(){
+  const content = document.getElementById('hwContent');
+  if(hwState.openAssignmentId){
+    const a = state.homeworkAssignments.find(x=>x.id===hwState.openAssignmentId);
+    if(a) { renderHwAssignmentDetail(a); return; }
+  }
+  const assignments = [...state.homeworkAssignments].sort((a,b)=> b.createdAt - a.createdAt);
+  if(assignments.length===0){ content.innerHTML = `<div class="card"><div class="empty-hint">Пока нет выданных заданий. Создайте первое во вкладке «Создать».</div></div>`; return; }
+
+  content.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:14px;">
+    ${assignments.map(a=>{
+      const classNames = a.classIds.map(id=> state.classes.find(k=>k.id===id)?.name).filter(Boolean).join(', ');
+      return `
+      <div class="card hw-card" data-open="${a.id}" style="padding:16px; cursor:pointer;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div style="font-weight:800; font-size:14px;">${escapeHtml(classNames||'Класс')}</div>
+          ${a.differentiated?`<span style="background:var(--dot-soft); color:var(--dot); font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px;">выборочно</span>`:''}
+        </div>
+        <div style="color:var(--secondary); font-size:13px; margin:6px 0 10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(a.description)}</div>
+        <div style="color:var(--muted); font-size:12px; display:flex; align-items:center; gap:5px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          до ${fmtRuShort(a.dueDate)} ${a.dueTime}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <style>.hw-card:hover{ transform: translateY(-2px); }</style>`;
+
+  content.querySelectorAll('[data-open]').forEach(el=>{
+    el.addEventListener('click', ()=>{ hwState.openAssignmentId = el.dataset.open; renderHomework(); });
+  });
+}
+
+function renderHwAssignmentDetail(a){
+  const content = document.getElementById('hwContent');
+  const roster = [];
+  a.classIds.forEach(cid=>{
+    const klass = state.classes.find(k=>k.id===cid);
+    if(!klass) return;
+    const indices = a.differentiated ? a.targetStudentIndices : klass.students.map((_,i)=>i);
+    indices.forEach(idx=>{ if(klass.students[idx]) roster.push({classId:cid, idx, name: klass.students[idx]}); });
+  });
+
+  content.innerHTML = `
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="display:flex; align-items:center; gap:12px; padding:16px 20px; border-bottom:1px solid var(--line);">
+      <div class="btn-icon" id="hwBackBtn">←</div>
+      <div>
+        <div style="font-weight:800; font-size:14.5px;">${escapeHtml(a.description)}</div>
+        <div style="color:var(--muted); font-size:12px;">до ${fmtRuShort(a.dueDate)} ${a.dueTime}</div>
+      </div>
+    </div>
+    <div id="hwRosterList" style="padding:8px 20px;"></div>
+  </div>`;
+  document.getElementById('hwBackBtn').onclick = ()=>{ hwState.openAssignmentId=null; renderHomework(); };
+
+  const key = 'hwsub_'+a.id;
+  if(listeners[key]) listeners[key]();
+  listeners[key] = onSnapshot(query(col('homeworkSubmissions'), where('assignmentId','==',a.id)), snap=>{
+    const subs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    const listEl = document.getElementById('hwRosterList');
+    if(!listEl) return;
+    const STATUS_META = {
+      NOT_SUBMITTED: {color:'#6B7280', label:'Не сдано'},
+      SUBMITTED_ON_TIME: {color:'#3DBE6A', label:'Сдано вовремя'},
+      SUBMITTED_LATE: {color:'#E0A63E', label:'Сдано с опозданием'},
+      REVIEWED: {color:'#3E6BE0', label:'Проверено'},
+    };
+    listEl.innerHTML = roster.map(r=>{
+      const sub = subs.find(s=>s.classId===r.classId && s.studentIndex===r.idx);
+      const status = sub?.status || 'NOT_SUBMITTED';
+      const meta = STATUS_META[status] || STATUS_META.NOT_SUBMITTED;
+      return `
+      <div class="hw-roster-row" data-cid="${r.classId}" data-idx="${r.idx}">
+        <div style="width:10px; height:10px; border-radius:50%; background:${meta.color}; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:13.5px;">${escapeHtml(r.name)}</div>
+          <div style="color:var(--muted); font-size:11.5px;">${meta.label}</div>
+        </div>
+        ${sub?.grade ? `<span class="jbadge grade" style="margin-right:6px;">${sub.grade}</span>`:''}
+        <span style="color:var(--muted);">›</span>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('.hw-roster-row').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const cid = el.dataset.cid, idx = parseInt(el.dataset.idx,10);
+        const sub = subs.find(s=>s.classId===cid && s.studentIndex===idx);
+        openSubmissionDetail(a, cid, idx, sub);
+      });
+    });
+  });
+
+  if(!document.getElementById('hwRosterStyle')){
+    const style = document.createElement('style');
+    style.id = 'hwRosterStyle';
+    style.textContent = `.hw-roster-row{ display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line); cursor:pointer; transition: background .15s; } .hw-roster-row:hover{ background:var(--elevated); }`;
+    document.head.appendChild(style);
+  }
+}
+
+function openSubmissionDetail(assignment, classId, idx, sub){
+  const klass = state.classes.find(k=>k.id===classId);
+  const name = klass?.students[idx] || '';
+  let grade = sub?.grade || '';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const STATUS_LABEL = {
+    NOT_SUBMITTED: 'Работа ещё не сдана', SUBMITTED_ON_TIME:'Сдано вовремя',
+    SUBMITTED_LATE:'Сдано с опозданием', REVIEWED:'Уже проверено'
+  };
+  let answerHtml;
+  if(sub?.answerText){
+    answerHtml = `<div style="background:var(--elevated); border-radius:10px; padding:12px; font-size:13px; margin-bottom:16px;">${escapeHtml(sub.answerText)}</div>`;
+  } else {
+    answerHtml = `<div style="background:var(--elevated); border-radius:10px; padding:16px; text-align:center; color:var(--muted); font-size:12.5px; margin-bottom:16px;">Ученик пока не отправил работу</div>`;
+  }
+
+  overlay.innerHTML = `<div class="modal-box">
+    <div class="modal-title">${escapeHtml(name)}</div>
+    <div class="modal-sub">${STATUS_LABEL[sub?.status || 'NOT_SUBMITTED']}</div>
+    ${answerHtml}
+    <label class="field-label">Оценка</label>
+    <div class="grade-tiles" id="subGradeTiles" style="margin-bottom:20px;">
+      ${['2','3','4','5'].map(g=>`<div class="grade-tile ${grade===g?'selected':''}" data-g="${g}">${g}</div>`).join('')}
+    </div>
+    <button class="btn btn-accent" id="subSendBtn" style="width:100%; justify-content:center; padding:12px;" ${!grade?'disabled':''}>Отправить в журнал</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=> overlay.classList.add('show'));
+  function close(){ overlay.classList.remove('show'); setTimeout(()=>overlay.remove(),250); }
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+
+  const sendBtn = overlay.querySelector('#subSendBtn');
+  overlay.querySelectorAll('#subGradeTiles .grade-tile').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      grade = el.dataset.g;
+      overlay.querySelectorAll('#subGradeTiles .grade-tile').forEach(t=> t.classList.toggle('selected', t.dataset.g===grade));
+      sendBtn.disabled = !grade;
+    });
+  });
+  sendBtn.onclick = async ()=>{
+    if(!grade) return;
+    const subDocId = `${assignment.id}_${classId}_${idx}`;
+    await setDoc(doc(col('homeworkSubmissions'), subDocId), {
+      assignmentId: assignment.id, classId, studentIndex: idx,
+      status: 'REVIEWED', submittedAt: sub?.submittedAt || Date.now(),
+      answerText: sub?.answerText || '', answerPhotoUrl: sub?.answerPhotoUrl || '',
+      grade, sentToJournal: true
+    });
+    const markDocId = `${classId}_${idx}_${fmtDateISO(new Date())}`;
+    await setDoc(doc(col('marks'), markDocId), {
+      classId, studentIndex: idx, date: fmtDateISO(new Date()),
+      grades:[grade], isDot:false, dotDeadline:null, dotFixed:false, isAbsent:false
+    });
+    toast('Оценка отправлена в журнал');
+    close();
+  };
+}
+
+/* ================= TOOLS TAB ================= */
+const TOOL_TABS = [
+  {id:'classes', label:'Классы'}, {id:'quarters', label:'Четверти'}, {id:'exams', label:'График КР'},
+  {id:'final', label:'Четвертные/годовые'}, {id:'comments', label:'Комментарии'}, {id:'indiv', label:'Инд. ДЗ'}
+];
+let toolsState = { tab:'exams' };
+
+function renderTools(){
+  const main = document.getElementById('mainArea');
+  if(!state.currentClassId && state.classes.length) state.currentClassId = state.classes[0].id;
+  const klass = state.classes.find(c=>c.id===state.currentClassId);
+
+  main.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Инструменты</div>
+        <div class="page-sub">Управление классами, четвертями и дополнительными данными</div>
+      </div>
+      ${state.classes.length ? classPickerHtml('toolsClassSel', state.currentClassId) : ''}
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+      ${TOOL_TABS.map(t=>`<div class="chip ${toolsState.tab===t.id?'selected':''}" data-ttab="${t.id}">${t.label}</div>`).join('')}
+    </div>
+    <div id="toolsContent"></div>
+  </div>`;
+
+  const classSel = document.getElementById('toolsClassSel');
+  if(classSel) classSel.onchange = ()=>{ state.currentClassId = classSel.value; renderTools(); };
+  main.querySelectorAll('[data-ttab]').forEach(el=>{
+    el.addEventListener('click', ()=>{ toolsState.tab = el.dataset.ttab; renderTools(); });
+  });
+
+  const content = document.getElementById('toolsContent');
+  if(toolsState.tab==='classes') return renderToolClasses(content);
+  if(toolsState.tab==='quarters') return renderToolQuarters(content);
+  if(!klass){ content.innerHTML = `<div class="card"><div class="empty-hint">Выберите класс.</div></div>`; return; }
+  if(toolsState.tab==='exams') return renderToolExams(content, klass);
+  if(toolsState.tab==='final') return renderToolFinal(content, klass);
+  if(toolsState.tab==='comments') return renderToolComments(content, klass);
+  if(toolsState.tab==='indiv') return renderToolIndiv(content, klass);
+}
+
+/* ---- Classes tool ---- */
+function renderToolClasses(content){
+  content.innerHTML = `
+  <div class="card" style="padding:22px; margin-bottom:20px; max-width:560px;">
+    <div style="display:flex; gap:10px; margin-bottom:10px;">
+      <input class="input" id="tcName" placeholder="Класс, напр. 6-А">
+      <input class="input" id="tcSubject" placeholder="Предмет">
+    </div>
+    <button class="btn btn-accent" id="tcAddBtn">Добавить класс</button>
+  </div>
+  <div id="tcList" style="display:flex; flex-direction:column; gap:12px;"></div>`;
+
+  document.getElementById('tcAddBtn').onclick = async ()=>{
+    const name = document.getElementById('tcName').value.trim();
+    const subject = document.getElementById('tcSubject').value.trim();
+    if(!name || !subject){ toast('Заполните название класса и предмет'); return; }
+    await addDoc(col('classes'), { name, subject, students: [] });
+    toast('Класс добавлен');
+  };
+
+  const list = document.getElementById('tcList');
+  list.innerHTML = state.classes.map(c=>`
+    <div class="card" style="padding:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div style="font-weight:800; font-size:14.5px;">${escapeHtml(c.name)} · ${escapeHtml(c.subject)}</div>
+        <button class="btn-danger-text" data-del-class="${c.id}">Удалить</button>
+      </div>
+      <div style="color:var(--secondary); font-size:12.5px; margin-bottom:10px;">${c.students.map(escapeHtml).join(', ') || 'Нет учеников'}</div>
+      <div style="display:flex; gap:8px;">
+        <input class="input" data-newstudent="${c.id}" placeholder="Имя ученика" style="max-width:240px;">
+        <button class="btn" data-addstudent="${c.id}">+ Добавить</button>
+      </div>
+    </div>
+  `).join('') || `<div class="card"><div class="empty-hint">Классов пока нет</div></div>`;
+
+  list.querySelectorAll('[data-del-class]').forEach(el=>{
+    el.addEventListener('click', async ()=>{ await deleteDoc(doc(col('classes'), el.dataset.delClass)); toast('Класс удалён'); });
+  });
+  list.querySelectorAll('[data-addstudent]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const cid = el.dataset.addstudent;
+      const input = list.querySelector(`[data-newstudent="${cid}"]`);
+      const val = input.value.trim();
+      if(!val) return;
+      const c = state.classes.find(x=>x.id===cid);
+      await setDoc(doc(col('classes'), cid), { ...c, students: [...c.students, val] });
+      toast('Ученик добавлен');
+    });
+  });
+}
+
+/* ---- Quarters tool ---- */
+function renderToolQuarters(content){
+  content.innerHTML = `
+  <div class="card" style="padding:22px; margin-bottom:20px; max-width:560px;">
+    <input class="input" id="tqName" placeholder="Название, напр. 2 четверть" style="margin-bottom:10px;">
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <input type="date" class="input" id="tqStart" value="${fmtDateISO(new Date())}">
+      <input type="date" class="input" id="tqEnd" value="${fmtDateISO(new Date(Date.now()+60*86400000))}">
+    </div>
+    <button class="btn btn-accent" id="tqAddBtn">Добавить четверть</button>
+  </div>
+  <div id="tqList" style="display:flex; flex-direction:column; gap:8px; max-width:560px;"></div>`;
+
+  document.getElementById('tqAddBtn').onclick = async ()=>{
+    const name = document.getElementById('tqName').value.trim();
+    const start = document.getElementById('tqStart').value;
+    const end = document.getElementById('tqEnd').value;
+    if(!name){ toast('Укажите название'); return; }
+    await addDoc(col('quarters'), { name, start, end });
+    toast('Четверть добавлена');
+  };
+
+  const list = document.getElementById('tqList');
+  list.innerHTML = state.quarters.map(q=>`
+    <div class="card" style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:13px; font-weight:600;">${escapeHtml(q.name)} · ${fmtRu(q.start)} — ${fmtRu(q.end)}</div>
+      <button class="btn-icon" data-del-q="${q.id}" style="color:var(--danger);">×</button>
+    </div>`).join('') || `<div class="empty-hint">Четвертей пока нет</div>`;
+  list.querySelectorAll('[data-del-q]').forEach(el=>{
+    el.addEventListener('click', async ()=>{ await deleteDoc(doc(col('quarters'), el.dataset.delQ)); toast('Четверть удалена'); });
+  });
+}
+
+/* ---- Exams tool ---- */
+function renderToolExams(content, klass){
+  content.innerHTML = `
+  <div class="card" style="padding:22px; margin-bottom:20px; max-width:640px;">
+    <div style="display:flex; gap:10px;">
+      <input type="date" class="input" id="teDate" value="${fmtDateISO(new Date())}" style="max-width:180px;">
+      <input class="input" id="teTopic" placeholder="Тема контрольной работы">
+      <button class="btn btn-accent" id="teAddBtn" style="flex-shrink:0;">Добавить</button>
+    </div>
+  </div>
+  <div id="teList" style="display:flex; flex-direction:column; gap:8px; max-width:640px;"></div>`;
+
+  document.getElementById('teAddBtn').onclick = async ()=>{
+    const date = document.getElementById('teDate').value;
+    const topic = document.getElementById('teTopic').value.trim();
+    if(!topic){ toast('Укажите тему'); return; }
+    await addDoc(col('exams'), { classId: klass.id, date, topic });
+    toast('Добавлено');
+  };
+
+  const key = 'exams_'+klass.id;
+  if(listeners[key]) listeners[key]();
+  listeners[key] = onSnapshot(query(col('exams'), where('classId','==',klass.id)), snap=>{
+    const exams = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.date.localeCompare(b.date));
+    const list = document.getElementById('teList');
+    if(!list) return;
+    list.innerHTML = exams.map(e=>`
+      <div class="card" style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:13px;">${fmtRu(e.date)} — ${escapeHtml(e.topic)}</div>
+        <button class="btn-icon" data-del="${e.id}" style="color:var(--danger);">×</button>
+      </div>`).join('') || `<div class="empty-hint">Контрольных пока не запланировано.</div>`;
+    list.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', async ()=>{ await deleteDoc(doc(col('exams'), el.dataset.del)); toast('Удалено'); });
+    });
+  });
+}
+
+/* ---- Final grades tool ---- */
+function renderToolFinal(content, klass){
+  content.innerHTML = `<div class="card" style="padding:10px 20px;" id="tfWrap"></div>`;
+
+  const key = 'final_'+klass.id;
+  if(listeners[key]) listeners[key].forEach(u=>u());
+  let grades = [], marks = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  function draw(){
+    const wrap = document.getElementById('tfWrap');
+    if(!wrap) return;
+    wrap.innerHTML = klass.students.map((name, idx)=>{
+      const avg = averageGrade(idx, marks, today);
+      const avgColor = avg===null ? 'var(--muted)' : (avg>=4.5?'var(--accent)':(avg<3.5?'var(--danger)':'var(--secondary)'));
+      const quarterBoxes = state.quarters.map(q=>{
+        const g = grades.find(x=>x.studentIndex===idx && x.quarterId===q.id)?.grade || '';
+        return `<div><div style="font-size:10px; color:var(--muted); margin-bottom:3px;">${escapeHtml(q.name.slice(0,2))}</div><input class="input" data-fg data-idx="${idx}" data-qid="${q.id}" value="${g}" maxlength="1" style="width:46px; text-align:center; padding:8px 4px;"></div>`;
+      }).join('');
+      const yearGrade = grades.find(x=>x.studentIndex===idx && x.quarterId==='year')?.grade || '';
+      return `
+      <div style="padding:14px 0; border-bottom:1px solid var(--line);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-weight:700; font-size:13.5px;">${idx+1}. ${escapeHtml(name)}</div>
+          <div style="font-size:12px; color:${avgColor};">Ср. балл: ${avg!==null?avg.toFixed(2):'—'}</div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-end;">
+          ${quarterBoxes}
+          <div><div style="font-size:10px; color:var(--muted); margin-bottom:3px;">Год</div><input class="input" data-fg data-idx="${idx}" data-qid="year" value="${yearGrade}" maxlength="1" style="width:46px; text-align:center; padding:8px 4px;"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    wrap.querySelectorAll('[data-fg]').forEach(el=>{
+      el.addEventListener('input', ()=>{ el.value = el.value.replace(/[^0-9]/g,'').slice(0,1); });
+      el.addEventListener('change', async ()=>{
+        const idx = parseInt(el.dataset.idx,10), qid = el.dataset.qid, grade = el.value;
+        const docId = `${klass.id}_${idx}_${qid}`;
+        await setDoc(doc(col('finalGrades'), docId), { classId: klass.id, studentIndex: idx, quarterId: qid, grade });
+        toast('Сохранено');
+      });
+    });
+  }
+  const u1 = onSnapshot(query(col('finalGrades'), where('classId','==',klass.id)), snap=>{ grades = snap.docs.map(d=>d.data()); draw(); });
+  const u2 = onSnapshot(query(col('marks'), where('classId','==',klass.id)), snap=>{ marks = snap.docs.map(d=>d.data()); draw(); });
+  listeners[key] = [u1,u2];
+}
+
+/* ---- Comments tool ---- */
+function renderToolComments(content, klass){
+  content.innerHTML = `
+  <div class="card" style="padding:22px; margin-bottom:20px; max-width:640px;">
+    <select class="input" id="tcoStudent" style="margin-bottom:10px;">
+      ${klass.students.map((s,i)=>`<option value="${i}">${escapeHtml(s)}</option>`).join('')}
+    </select>
+    <textarea class="input" id="tcoText" placeholder="Комментарий" style="min-height:70px; margin-bottom:10px;"></textarea>
+    <button class="btn btn-accent" id="tcoAddBtn">Добавить</button>
+  </div>
+  <div id="tcoList" style="display:flex; flex-direction:column; gap:8px; max-width:640px;"></div>`;
+
+  document.getElementById('tcoAddBtn').onclick = async ()=>{
+    const idx = parseInt(document.getElementById('tcoStudent').value,10);
+    const text = document.getElementById('tcoText').value.trim();
+    if(!text){ toast('Введите текст комментария'); return; }
+    await addDoc(col('comments'), { classId: klass.id, studentIndex: idx, date: fmtDateISO(new Date()), text });
+    document.getElementById('tcoText').value='';
+    toast('Комментарий добавлен');
+  };
+
+  const key = 'comments_'+klass.id;
+  if(listeners[key]) listeners[key]();
+  listeners[key] = onSnapshot(query(col('comments'), where('classId','==',klass.id)), snap=>{
+    const comments = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.date.localeCompare(a.date));
+    const list = document.getElementById('tcoList');
+    if(!list) return;
+    list.innerHTML = comments.map(c=>`
+      <div class="card" style="padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div style="font-size:12.5px;"><b>${escapeHtml(klass.students[c.studentIndex]||'')}</b> · ${fmtRu(c.date)} — ${escapeHtml(c.text)}</div>
+        <button class="btn-icon" data-del="${c.id}" style="color:var(--danger); flex-shrink:0;">×</button>
+      </div>`).join('') || `<div class="empty-hint">Комментариев пока нет.</div>`;
+    list.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', async ()=>{ await deleteDoc(doc(col('comments'), el.dataset.del)); toast('Удалено'); });
+    });
+  });
+}
+
+/* ---- Individual homework tool ---- */
+function renderToolIndiv(content, klass){
+  content.innerHTML = `
+  <div class="card" style="padding:22px; margin-bottom:20px; max-width:640px;">
+    <select class="input" id="tiStudent" style="margin-bottom:10px;">
+      ${klass.students.map((s,i)=>`<option value="${i}">${escapeHtml(s)}</option>`).join('')}
+    </select>
+    <input type="date" class="input" id="tiDate" value="${fmtDateISO(new Date())}" style="margin-bottom:10px;">
+    <input class="input" id="tiText" placeholder="Задание" style="margin-bottom:10px;">
+    <button class="btn btn-accent" id="tiAddBtn">Добавить</button>
+  </div>
+  <div id="tiList" style="display:flex; flex-direction:column; gap:8px; max-width:640px;"></div>`;
+
+  document.getElementById('tiAddBtn').onclick = async ()=>{
+    const idx = parseInt(document.getElementById('tiStudent').value,10);
+    const date = document.getElementById('tiDate').value;
+    const text = document.getElementById('tiText').value.trim();
+    if(!text){ toast('Введите текст задания'); return; }
+    await addDoc(col('individualHw'), { classId: klass.id, studentIndex: idx, date, text });
+    document.getElementById('tiText').value='';
+    toast('Задание добавлено');
+  };
+
+  const key = 'indiv_'+klass.id;
+  if(listeners[key]) listeners[key]();
+  listeners[key] = onSnapshot(query(col('individualHw'), where('classId','==',klass.id)), snap=>{
+    const hw = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.date.localeCompare(a.date));
+    const list = document.getElementById('tiList');
+    if(!list) return;
+    list.innerHTML = hw.map(h=>`
+      <div class="card" style="padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div style="font-size:12.5px;"><b>${escapeHtml(klass.students[h.studentIndex]||'')}</b> · ${fmtRu(h.date)} — ${escapeHtml(h.text)}</div>
+        <button class="btn-icon" data-del="${h.id}" style="color:var(--danger); flex-shrink:0;">×</button>
+      </div>`).join('') || `<div class="empty-hint">Индивидуальных заданий пока нет.</div>`;
+    list.querySelectorAll('[data-del]').forEach(el=>{
+      el.addEventListener('click', async ()=>{ await deleteDoc(doc(col('individualHw'), el.dataset.del)); toast('Удалено'); });
+    });
+  });
+}
+</script>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
